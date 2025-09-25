@@ -4,12 +4,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } f
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyABz-NUgHc-x7_RQM_z9kKtZvVGbAedRGI",
+  authDomain: "sos-emergency-app-4116c.firebaseapp.com",
+  projectId: "sos-emergency-app-4116c",
+  storageBucket: "sos-emergency-app-4116c.firebasestorage.app",
+  messagingSenderId: "492785441483",
+  appId: "1:492785441483:web:93e04cb271130f9b33994e"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -17,7 +17,7 @@ const db = getFirestore(app);
 
 // ===== EmailJS Setup =====
 import emailjs from "https://cdn.emailjs.com/dist/email.min.js";
-emailjs.init("YOUR_EMAILJS_PUBLIC_KEY");
+emailjs.init("Ss8SLxGczWuKD90v7kyUt");
 
 // ===== Login / Signup =====
 const signupBtn = document.getElementById("signupBtn");
@@ -81,7 +81,7 @@ async function sendAlerts(locationLink){
     const message=`SOS ALERT! ${c.name}, I need help. Location: ${locationLink}`;
 
     // EmailJS
-    emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
+    emailjs.send("service_vrzcyjh","template_8x3sslp",{
       to_email:c.email,
       user_name:"Tanisha",
       message:message,

@@ -7,8 +7,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const accountSid = "YOUR_TWILIO_SID";
-const authToken = "YOUR_TWILIO_AUTH_TOKEN";
+const accountSid = "ACce11327a9bb641dd0c8217552e683571";
+const authToken = "cf1664d8734f80e3a0df1e612557a0d9";
 const client = new twilio(accountSid, authToken);
 
 app.post("/sos", (req, res) => {
@@ -17,7 +17,7 @@ app.post("/sos", (req, res) => {
 
     client.messages.create({
         body: msg,
-        from: "YOUR_TWILIO_NUMBER",
+        from: "+13204001363",
         to: toNumber
     }).then(message => res.send({status: "SMS Sent", sid: message.sid}))
       .catch(err => res.send({status: "Error", error: err}));
