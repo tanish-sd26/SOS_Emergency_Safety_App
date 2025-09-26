@@ -109,6 +109,21 @@ sosBtn.addEventListener("click", ()=>{
 });
 }
 
+const alarmSound = document.getElementById("alarmSound");
+
+
+document.getElementById("sosButton").addEventListener("click", ()=>{
+  alarmSound.loop = true; 
+  alarmSound.play();
+  sendAlerts(); 
+});
+
+document.getElementById("imSafeButton").addEventListener("click", ()=>{
+  alarmSound.pause();
+  alarmSound.currentTime = 0; 
+  alert("You are marked safe. Alarm stopped.");
+});
+ 
 // I'm Safe
 if(imSafeBtn){
 imSafeBtn.addEventListener("click", ()=>{
