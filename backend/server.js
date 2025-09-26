@@ -1,3 +1,5 @@
+// server.js (use this)
+require('dotenv').config();           // load .env at top
 const express = require("express");
 const bodyParser = require("body-parser");
 const twilio = require("twilio");
@@ -7,25 +9,29 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-import dotenv from "dotenv";
-dotenv.config();
+// Read from environment variables
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken  = process.env.TWILIO_AUTH_TOKEN;
+const twilioNumber = process.env.TWILIO_PHONE_NUMBER || "+1234567890";
+const PORT = process.env.PORT || 3000;
 
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+if (!accountSid || !authToken) {
+  console.error("ERROR: Twilio credentials are not set in .env");
+  process.exit(1); // fail early so you know to set them
+}
 
-//const accountSid = "ACce11327a9bb641dd0c8217552e683571";
-//const authToken = "cf1664d8734f80e3a0df1e612557a0d9";
-//const client = new twilio(accountSid, authToken);
+const client = new twilio(accountSid, authToken);
 
 app.post("/sos", (req, res) => {
-    const msg = req.body.message;
-    const toNumber = req.body.to || "+91XXXXXXXXXX"; // default contact if not sent in body
+  const msg = req.body.message;
+  const toNumber = req.body.to || req.body.toNumber || "+91XXXXXXXXXX"; // prefer passed number
 
-    client.messages.create({
-        body: msg,
-        from: "+13204001363",
-        to: toNumber
-    }).then(message => res.send({status: "SMS Sent", sid: message.sid}))
-      .catch(err => res.send({status: "Error", error: err}));
+  client.messages.create({
+    body: msg,
+    from: twilioNumber,
+    to: toNumber
+  }).then(message => res.send({status: "SMS Sent", sid: message.sid}))
+    .catch(err => res.status(500).send({status: "Error", error: err.message}));
 });
 
-app.listen(3000, () => console.log("Twilio server running on port 3000"));
+app.listen(PORT, () => console.log(`Twilio server running on port ${PORT}`));
