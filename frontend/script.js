@@ -111,7 +111,6 @@ sosBtn.addEventListener("click", ()=>{
 
 const alarmSound = document.getElementById("alarmSound");
 
-
 document.getElementById("sosButton").addEventListener("click", ()=>{
   alarmSound.loop = true; 
   alarmSound.play();

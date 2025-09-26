@@ -7,9 +7,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const accountSid = "ACce11327a9bb641dd0c8217552e683571";
-const authToken = "cf1664d8734f80e3a0df1e612557a0d9";
-const client = new twilio(accountSid, authToken);
+import dotenv from "dotenv";
+dotenv.config();
+
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+//const accountSid = "ACce11327a9bb641dd0c8217552e683571";
+//const authToken = "cf1664d8734f80e3a0df1e612557a0d9";
+//const client = new twilio(accountSid, authToken);
 
 app.post("/sos", (req, res) => {
     const msg = req.body.message;
