@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SOS Emergency Safety App - Send emergency alerts with SMS, Call & Email">
+  <meta name="theme-color" content="#dc2626">
+  <title>SOS Emergency App - Login</title>
+
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🆘</text></svg>">
+</head>
+<body data-theme="light">
+
+  <div class="auth-wrapper" id="authWrapper">
+    <div class="auth-container">
+
+      <div class="auth-logo">
+        <div class="logo-icon">🆘</div>
+        <h1 class="logo-text">SOS SAFETY</h1>
+        <p class="logo-subtitle">Emergency Alert System</p>
+        <p class="logo-features">SMS • Call • Email • GPS Location</p>
+      </div>
+
+      <div class="auth-message" id="authMessage" role="alert" aria-live="polite"></div>
+
+      <!-- Login Form -->
+      <form class="auth-form" id="loginForm" novalidate>
+        <h2 class="form-title">Welcome Back</h2>
+
+        <div class="input-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required>
+          <span class="input-error" id="loginEmailError"></span>
+        </div>
+
+        <div class="input-group">
+          <label for="loginPassword">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required minlength="6">
+            <button type="button" class="toggle-password" data-target="loginPassword" aria-label="Toggle password">👁</button>
+          </div>
+          <span class="input-error" id="loginPasswordError"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+          <span class="btn-text">Log In</span>
+          <span class="btn-loader hidden"></span>
+        </button>
+
+        <p class="form-switch">
+          Don't have an account? <a href="#" id="showSignup" class="link">Sign Up</a>
+        </p>
+      </form>
+
+      <!-- Signup Form -->
+      <form class="auth-form hidden" id="signupForm" novalidate>
+        <h2 class="form-title">Create Account</h2>
+
+        <div class="input-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="Your full name" autocomplete="name" required>
+          <span class="input-error" id="signupNameError"></span>
+        </div>
+
+        <div class="input-group">
+          <label for="signupEmail">Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" required>
+          <span class="input-error" id="signupEmailError"></span>
+        </div>
+
+        <div class="input-group">
+          <label for="signupPhone">Phone Number</label>
+          <input type="tel" id="signupPhone" placeholder="+91 9876543210" autocomplete="tel" required>
+          <span class="input-error" id="signupPhoneError"></span>
+        </div>
+
+        <div class="input-group">
+          <label for="signupPassword">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="signupPassword" placeholder="Minimum 6 characters" autocomplete="new-password" required minlength="6">
+            <button type="button" class="toggle-password" data-target="signupPassword" aria-label="Toggle password">👁</button>
+          </div>
+          <span class="input-error" id="signupPasswordError"></span>
+        </div>
+
+        <div class="input-group">
+          <label for="signupConfirm">Confirm Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="signupConfirm" placeholder="Repeat your password" autocomplete="new-password" required minlength="6">
+            <button type="button" class="toggle-password" data-target="signupConfirm" aria-label="Toggle password">👁</button>
+          </div>
+          <span class="input-error" id="signupConfirmError"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="signupBtn">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-loader hidden"></span>
+        </button>
+
+        <p class="form-switch">
+          Already have an account? <a href="#" id="showLogin" class="link">Log In</a>
+        </p>
+      </form>
+
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>Checking authentication...</p>
+  </div>
+
+  <script type="module" src="/js/firebase.js"></script>
+  <script type="module" src="/js/theme.js"></script>
+  <script type="module" src="/js/auth.js"></script>
+</body>
+</html>
