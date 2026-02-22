@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SOS Dashboard - Trigger emergency alerts with SMS, Call & Email">
+  <meta name="theme-color" content="#dc2626">
+  <title>SOS Emergency - Dashboard</title>
+
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🆘</text></svg>">
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body data-theme="light">
+
+  <!-- TOP BAR -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a href="/pages/dashboard.html" class="topbar-logo">
+        <span class="logo-icon-small">🆘</span>
+        <span class="logo-name">SOS APP</span>
+      </a>
+      <div class="topbar-actions">
+        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <button class="btn-icon profile-btn" id="profileBtn" aria-label="Open profile menu" aria-expanded="false">
+            <span class="profile-avatar" id="profileAvatar">👤</span>
+          </button>
+          <div class="dropdown-menu hidden" id="dropdownMenu" role="menu">
+            <div class="dropdown-header">
+              <p class="dropdown-name" id="dropdownName">User</p>
+              <p class="dropdown-email" id="dropdownEmail">user@email.com</p>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/pages/dashboard.html" class="dropdown-item active" role="menuitem"><span>📊</span> Dashboard</a>
+            <a href="/pages/contacts.html" class="dropdown-item" role="menuitem"><span>👥</span> Emergency Contacts</a>
+            <a href="/pages/history.html" class="dropdown-item" role="menuitem"><span>📜</span> Alert History</a>
+            <a href="/pages/settings.html" class="dropdown-item" role="menuitem"><span>⚙️</span> Settings</a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-logout" id="logoutBtn" role="menuitem"><span>🚪</span> Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="main-content">
+    <div class="dashboard-container">
+
+      <!-- Status Badge -->
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot safe" id="statusDot"></span>
+        <span class="status-text" id="statusText">You are Safe</span>
+      </div>
+
+      <!-- Alert Method Indicators -->
+      <div class="alert-methods">
+        <div class="method-badge sms-badge">
+          <span>📱</span> SMS
+        </div>
+        <div class="method-badge call-badge">
+          <span>📞</span> Call
+        </div>
+        <div class="method-badge email-badge">
+          <span>📧</span> Email
+        </div>
+      </div>
+
+      <!-- SOS Button -->
+      <div class="sos-section">
+        <button class="sos-button" id="sosButton" aria-label="Trigger SOS emergency alert">
+          <span class="sos-pulse"></span>
+          <span class="sos-pulse delay"></span>
+          <span class="sos-inner">
+            <span class="sos-label">SOS</span>
+            <span class="sos-sublabel">Tap for Emergency</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- SOS Confirmation Modal -->
+      <div class="modal-overlay hidden" id="sosModal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+          <h3 id="modalTitle">⚠️ Confirm Emergency Alert</h3>
+          <p>This will:</p>
+          <ul class="modal-list">
+            <li>📍 Capture your GPS location</li>
+            <li>📱 Send SMS to all emergency contacts</li>
+            <li>📞 Make voice call to all contacts</li>
+            <li>📧 Send email alert to all contacts</li>
+            <li>💾 Log alert in your history</li>
+          </ul>
+          <p class="modal-warning">Are you sure this is an emergency?</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+            <button class="btn btn-danger" id="modalConfirm">
+              <span class="btn-text">🚨 Send SOS Alert</span>
+              <span class="btn-loader hidden"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Progress Modal -->
+      <div class="modal-overlay hidden" id="progressModal">
+        <div class="modal progress-modal" role="dialog" aria-modal="true">
+          <h3>🚨 Sending SOS Alert...</h3>
+          <div class="progress-list">
+            <div class="progress-item" id="progressGPS">
+              <span class="progress-icon">⏳</span>
+              <span class="progress-text">Capturing GPS location...</span>
+            </div>
+            <div class="progress-item" id="progressSave">
+              <span class="progress-icon">⏳</span>
+              <span class="progress-text">Saving alert to database...</span>
+            </div>
+            <div class="progress-item" id="progressEmail">
+              <span class="progress-icon">⏳</span>
+              <span class="progress-text">Sending email alerts...</span>
+            </div>
+            <div class="progress-item" id="progressSMS">
+              <span class="progress-icon">⏳</span>
+              <span class="progress-text">Triggering SMS & Calls (Cloud)...</span>
+            </div>
+          </div>
+          <p class="progress-note" id="progressNote">Please wait...</p>
+        </div>
+      </div>
+
+      <!-- Quick Info Cards -->
+      <div class="info-cards">
+        <div class="info-card">
+          <div class="info-card-icon">👥</div>
+          <div class="info-card-data">
+            <span class="info-card-number" id="contactCount">0</span>
+            <span class="info-card-label">Contacts</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">🚨</div>
+          <div class="info-card-data">
+            <span class="info-card-number" id="alertCount">0</span>
+            <span class="info-card-label">Alerts Sent</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">📍</div>
+          <div class="info-card-data">
+            <span class="info-card-number" id="locationStatus">Pending</span>
+            <span class="info-card-label">GPS Status</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Last Alert Preview -->
+      <div class="last-alert-section hidden" id="lastAlertSection">
+        <h3 class="section-title">Last Alert</h3>
+        <div class="last-alert-card" id="lastAlertCard">
+          <div class="last-alert-time" id="lastAlertTime">--</div>
+          <div class="last-alert-location">
+            <a href="#" id="lastAlertLink" target="_blank" rel="noopener noreferrer">📍 View on Google Maps</a>
+          </div>
+          <div class="last-alert-badges">
+            <span class="mini-badge" id="lastSmsStatus">SMS: --</span>
+            <span class="mini-badge" id="lastCallStatus">Call: --</span>
+            <span class="mini-badge" id="lastEmailStatus">Email: --</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module" src="/js/firebase.js"></script>
+  <script type="module" src="/js/theme.js"></script>
+  <script type="module" src="/js/navigation.js"></script>
+  <script type="module" src="/js/sos.js"></script>
+</body>
+</html>
