@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manage your emergency contacts">
+  <meta name="theme-color" content="#dc2626">
+  <title>SOS Emergency - Contacts</title>
+
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🆘</text></svg>">
+</head>
+<body data-theme="light">
+
+  <!-- TOP BAR -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a href="/pages/dashboard.html" class="topbar-logo">
+        <span class="logo-icon-small">🆘</span>
+        <span class="logo-name">SOS APP</span>
+      </a>
+      <div class="topbar-actions">
+        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <button class="btn-icon profile-btn" id="profileBtn" aria-label="Open profile menu" aria-expanded="false">
+            <span class="profile-avatar" id="profileAvatar">👤</span>
+          </button>
+          <div class="dropdown-menu hidden" id="dropdownMenu" role="menu">
+            <div class="dropdown-header">
+              <p class="dropdown-name" id="dropdownName">User</p>
+              <p class="dropdown-email" id="dropdownEmail">user@email.com</p>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/pages/dashboard.html" class="dropdown-item" role="menuitem"><span>📊</span> Dashboard</a>
+            <a href="/pages/contacts.html" class="dropdown-item active" role="menuitem"><span>👥</span> Emergency Contacts</a>
+            <a href="/pages/history.html" class="dropdown-item" role="menuitem"><span>📜</span> Alert History</a>
+            <a href="/pages/settings.html" class="dropdown-item" role="menuitem"><span>⚙️</span> Settings</a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-logout" id="logoutBtn" role="menuitem"><span>🚪</span> Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="page-container">
+
+      <div class="page-header">
+        <h2 class="page-title">👥 Emergency Contacts</h2>
+        <p class="page-subtitle">These people will receive SMS, Call & Email during an emergency</p>
+      </div>
+
+      <!-- Add Contact Form - Now with EMAIL field -->
+      <div class="card add-contact-card">
+        <h3 class="card-title">Add New Contact</h3>
+        <form class="contact-form" id="addContactForm" novalidate>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="contactName">Name *</label>
+              <input type="text" id="contactName" placeholder="Contact name" required>
+              <span class="input-error" id="contactNameError"></span>
+            </div>
+            <div class="input-group">
+              <label for="contactPhone">Phone Number *</label>
+              <input type="tel" id="contactPhone" placeholder="+91 9876543210" required>
+              <span class="input-error" id="contactPhoneError"></span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="contactEmail">Email Address *</label>
+            <input type="email" id="contactEmail" placeholder="contact@email.com" required>
+            <span class="input-error" id="contactEmailError"></span>
+          </div>
+          <div class="input-group">
+            <label for="contactRelation">Relationship (Optional)</label>
+            <select id="contactRelation">
+              <option value="">Select relationship</option>
+              <option value="parent">Parent</option>
+              <option value="spouse">Spouse</option>
+              <option value="sibling">Sibling</option>
+              <option value="friend">Friend</option>
+              <option value="colleague">Colleague</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" id="addContactBtn">
+            <span class="btn-text">➕ Add Contact</span>
+            <span class="btn-loader hidden"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Contacts List -->
+      <div class="card contacts-list-card">
+        <h3 class="card-title">Your Contacts <span class="badge" id="contactsBadge">0</span></h3>
+
+        <div class="empty-state" id="emptyContacts">
+          <div class="empty-icon">📱</div>
+          <p>No emergency contacts added yet</p>
+          <p class="empty-hint">Add contacts above — they'll get SMS, Call & Email during emergencies</p>
+        </div>
+
+        <div class="contacts-list" id="contactsList"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay hidden" id="deleteModal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>🗑️ Delete Contact</h3>
+      <p>Remove <strong id="deleteContactName"></strong> from your emergency contacts?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="deleteCancel">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>Loading contacts...</p>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module" src="/js/firebase.js"></script>
+  <script type="module" src="/js/theme.js"></script>
+  <script type="module" src="/js/navigation.js"></script>
+  <script type="module" src="/js/contacts.js"></script>
+</body>
+</html>
