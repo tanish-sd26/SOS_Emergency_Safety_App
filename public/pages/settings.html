@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SOS App Settings">
+  <meta name="theme-color" content="#dc2626">
+  <title>SOS Emergency - Settings</title>
+
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🆘</text></svg>">
+</head>
+<body data-theme="light">
+
+  <!-- TOP BAR -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a href="/pages/dashboard.html" class="topbar-logo">
+        <span class="logo-icon-small">🆘</span>
+        <span class="logo-name">SOS APP</span>
+      </a>
+      <div class="topbar-actions">
+        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <button class="btn-icon profile-btn" id="profileBtn" aria-label="Open profile menu" aria-expanded="false">
+            <span class="profile-avatar" id="profileAvatar">👤</span>
+          </button>
+          <div class="dropdown-menu hidden" id="dropdownMenu" role="menu">
+            <div class="dropdown-header">
+              <p class="dropdown-name" id="dropdownName">User</p>
+              <p class="dropdown-email" id="dropdownEmail">user@email.com</p>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/pages/dashboard.html" class="dropdown-item" role="menuitem"><span>📊</span> Dashboard</a>
+            <a href="/pages/contacts.html" class="dropdown-item" role="menuitem"><span>👥</span> Emergency Contacts</a>
+            <a href="/pages/history.html" class="dropdown-item" role="menuitem"><span>📜</span> Alert History</a>
+            <a href="/pages/settings.html" class="dropdown-item active" role="menuitem"><span>⚙️</span> Settings</a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-logout" id="logoutBtn" role="menuitem"><span>🚪</span> Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="page-container">
+
+      <div class="page-header">
+        <h2 class="page-title">⚙️ Settings</h2>
+        <p class="page-subtitle">Manage your account and alert preferences</p>
+      </div>
+
+      <!-- Profile -->
+      <div class="card settings-card">
+        <h3 class="card-title">Profile Information</h3>
+        <div class="settings-info">
+          <div class="settings-row">
+            <span class="settings-label">Email</span>
+            <span class="settings-value" id="settingsEmail">Loading...</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Display Name</span>
+            <span class="settings-value" id="settingsName">Loading...</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Account Created</span>
+            <span class="settings-value" id="settingsCreated">Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Channels -->
+      <div class="card settings-card">
+        <h3 class="card-title">Alert Channels</h3>
+        <div class="settings-row">
+          <span class="settings-label">📱 SMS Alerts (Twilio)</span>
+          <span class="settings-value status-active">✅ Active</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">📞 Voice Calls (Twilio)</span>
+          <span class="settings-value status-active">✅ Active</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">📧 Email Alerts (EmailJS)</span>
+          <span class="settings-value status-active">✅ Active</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">📍 GPS Location</span>
+          <span class="settings-value status-active">✅ Active</span>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="card settings-card">
+        <h3 class="card-title">Appearance</h3>
+        <div class="settings-row clickable" id="themeSettingRow">
+          <span class="settings-label">Dark Mode</span>
+          <div class="toggle-switch" id="themeSwitch">
+            <div class="toggle-track">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="card settings-card danger-card">
+        <h3 class="card-title">Danger Zone</h3>
+        <div class="settings-row">
+          <div>
+            <span class="settings-label">Delete All Alert History</span>
+            <p class="settings-hint">This action cannot be undone</p>
+          </div>
+          <button class="btn btn-danger btn-small" id="clearHistoryBtn">Clear History</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Clear History Modal -->
+  <div class="modal-overlay hidden" id="clearModal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>🗑️ Clear All History</h3>
+      <p>This will permanently delete all your SOS alert records. This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="clearCancel">Cancel</button>
+        <button class="btn btn-danger" id="clearConfirm">Delete All</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>Loading settings...</p>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module" src="/js/firebase.js"></script>
+  <script type="module" src="/js/theme.js"></script>
+  <script type="module" src="/js/navigation.js"></script>
+  <script type="module">
+    import { auth, db } from '/js/firebase.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+    import { collection, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = '/index.html';
+        return;
+      }
+
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('settingsEmail').textContent = user.email || 'N/A';
+      document.getElementById('settingsName').textContent = user.displayName || 'Not set';
+
+      const creationTime = user.metadata.creationTime;
+      if (creationTime) {
+        document.getElementById('settingsCreated').textContent = new Date(creationTime).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+      }
+
+      // Theme toggle
+      const themeSwitch = document.getElementById('themeSwitch');
+      const themeSettingRow = document.getElementById('themeSettingRow');
+      if (document.body.getAttribute('data-theme') === 'dark') {
+        themeSwitch.classList.add('active');
+      }
+
+      themeSettingRow.addEventListener('click', () => {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const newTheme = isDark ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        themeSwitch.classList.toggle('active');
+        const themeIcon = document.getElementById('themeIcon');
+        if (themeIcon) themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      });
+
+      // Clear History
+      const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+      const clearModal = document.getElementById('clearModal');
+      const clearCancel = document.getElementById('clearCancel');
+      const clearConfirm = document.getElementById('clearConfirm');
+
+      clearHistoryBtn.addEventListener('click', () => clearModal.classList.remove('hidden'));
+      clearCancel.addEventListener('click', () => clearModal.classList.add('hidden'));
+      clearModal.addEventListener('click', (e) => { if (e.target === clearModal) clearModal.classList.add('hidden'); });
+
+      clearConfirm.addEventListener('click', async () => {
+        try {
+          clearConfirm.disabled = true;
+          clearConfirm.textContent = 'Deleting...';
+          const historyRef = collection(db, 'users', user.uid, 'sos_history');
+          const snapshot = await getDocs(historyRef);
+          await Promise.all(snapshot.docs.map(d => deleteDoc(doc(db, 'users', user.uid, 'sos_history', d.id))));
+          clearModal.classList.add('hidden');
+          showToast('All alert history cleared', 'success');
+        } catch (error) {
+          console.error('Error:', error);
+          showToast('Failed to clear history', 'error');
+        } finally {
+          clearConfirm.disabled = false;
+          clearConfirm.textContent = 'Delete All';
+        }
+      });
+    });
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+  </script>
+</body>
+</html>
