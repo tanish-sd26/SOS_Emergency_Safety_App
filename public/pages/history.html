@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View your SOS alert history">
+  <meta name="theme-color" content="#dc2626">
+  <title>SOS Emergency - Alert History</title>
+
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🆘</text></svg>">
+</head>
+<body data-theme="light">
+
+  <!-- TOP BAR -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a href="/pages/dashboard.html" class="topbar-logo">
+        <span class="logo-icon-small">🆘</span>
+        <span class="logo-name">SOS APP</span>
+      </a>
+      <div class="topbar-actions">
+        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <button class="btn-icon profile-btn" id="profileBtn" aria-label="Open profile menu" aria-expanded="false">
+            <span class="profile-avatar" id="profileAvatar">👤</span>
+          </button>
+          <div class="dropdown-menu hidden" id="dropdownMenu" role="menu">
+            <div class="dropdown-header">
+              <p class="dropdown-name" id="dropdownName">User</p>
+              <p class="dropdown-email" id="dropdownEmail">user@email.com</p>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/pages/dashboard.html" class="dropdown-item" role="menuitem"><span>📊</span> Dashboard</a>
+            <a href="/pages/contacts.html" class="dropdown-item" role="menuitem"><span>👥</span> Emergency Contacts</a>
+            <a href="/pages/history.html" class="dropdown-item active" role="menuitem"><span>📜</span> Alert History</a>
+            <a href="/pages/settings.html" class="dropdown-item" role="menuitem"><span>⚙️</span> Settings</a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-logout" id="logoutBtn" role="menuitem"><span>🚪</span> Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="page-container">
+
+      <div class="page-header">
+        <h2 class="page-title">📜 Alert History</h2>
+        <p class="page-subtitle">Complete record of all emergency alerts with delivery status</p>
+      </div>
+
+      <div class="history-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="totalAlerts">0</span>
+          <span class="stat-label">Total Alerts</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="monthAlerts">0</span>
+          <span class="stat-label">This Month</span>
+        </div>
+      </div>
+
+      <div class="card history-card">
+        <div class="empty-state" id="emptyHistory">
+          <div class="empty-icon">🛡️</div>
+          <p>No alerts triggered yet</p>
+          <p class="empty-hint">Your SOS alert history will appear here</p>
+        </div>
+
+        <div class="history-list" id="historyList"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>Loading history...</p>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module" src="/js/firebase.js"></script>
+  <script type="module" src="/js/theme.js"></script>
+  <script type="module" src="/js/navigation.js"></script>
+  <script type="module" src="/js/history.js"></script>
+</body>
+</html>
