@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SOS Dashboard - Trigger emergency alerts with SMS, Call & Email">
+  <meta name="description" content="SOS Dashboard - Emergency alerts with WhatsApp, Email, Voice & Alarm">
   <meta name="theme-color" content="#dc2626">
   <title>SOS Emergency - Dashboard</title>
 
@@ -14,7 +14,6 @@
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
 </head>
 <body data-theme="light">
 
@@ -26,6 +25,12 @@
         <span class="logo-name">SOS APP</span>
       </a>
       <div class="topbar-actions">
+        <!-- Voice Status Indicator -->
+        <div class="voice-status" id="voiceStatus" title="Voice trigger status">
+          <span class="voice-dot" id="voiceDot"></span>
+          <span class="voice-label" id="voiceLabel">🎤 OFF</span>
+        </div>
+
         <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
           <span class="theme-icon" id="themeIcon">🌙</span>
         </button>
@@ -61,21 +66,25 @@
         <span class="status-text" id="statusText">You are Safe</span>
       </div>
 
-      <!-- Alert Method Indicators -->
+      <!-- Alert Channel Badges -->
       <div class="alert-methods">
-        <div class="method-badge sms-badge">
-          <span>📱</span> SMS
-        </div>
-        <div class="method-badge call-badge">
-          <span>📞</span> Call
-        </div>
-        <div class="method-badge email-badge">
-          <span>📧</span> Email
-        </div>
+        <div class="method-badge whatsapp-badge"><span>💬</span> WhatsApp</div>
+        <div class="method-badge email-badge"><span>📧</span> Email</div>
+        <div class="method-badge audio-badge"><span>🔊</span> Alarm</div>
+        <div class="method-badge voice-badge"><span>🎤</span> Voice</div>
       </div>
 
-      <!-- SOS Button -->
-      <div class="sos-section">
+      <!-- Voice Trigger Toggle -->
+      <div class="voice-trigger-section">
+        <button class="voice-toggle-btn" id="voiceToggleBtn" type="button">
+          <span class="voice-toggle-icon" id="voiceToggleIcon">🎤</span>
+          <span class="voice-toggle-text" id="voiceToggleText">Enable Voice Trigger</span>
+        </button>
+        <p class="voice-hint" id="voiceHint">Say <strong>"HELP"</strong> or <strong>"EMERGENCY"</strong> to trigger SOS</p>
+      </div>
+
+      <!-- SOS Button Section (Visible when alarm NOT active) -->
+      <div class="sos-section" id="sosSection">
         <button class="sos-button" id="sosButton" aria-label="Trigger SOS emergency alert">
           <span class="sos-pulse"></span>
           <span class="sos-pulse delay"></span>
@@ -86,22 +95,40 @@
         </button>
       </div>
 
+      <!-- I'M SAFE Section (Visible when alarm IS active) -->
+      <div class="safe-section hidden" id="safeSection">
+        <div class="alarm-active-indicator">
+          <span class="alarm-icon">🔊</span>
+          <span class="alarm-text">ALARM IS ACTIVE</span>
+          <span class="alarm-icon">🔊</span>
+        </div>
+        <button class="safe-button" id="safeButton" type="button" aria-label="Stop alarm and mark safe">
+          <span class="safe-pulse"></span>
+          <span class="safe-pulse delay"></span>
+          <span class="safe-inner">
+            <span class="safe-icon">🛡️</span>
+            <span class="safe-label">I'M SAFE</span>
+            <span class="safe-sublabel">Tap to stop alarm</span>
+          </span>
+        </button>
+        <p class="safe-hint">Press to confirm you are safe and stop the alarm</p>
+      </div>
+
       <!-- SOS Confirmation Modal -->
       <div class="modal-overlay hidden" id="sosModal">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-          <h3 id="modalTitle">⚠️ Confirm Emergency Alert</h3>
+        <div class="modal" role="dialog" aria-modal="true">
+          <h3>⚠️ Confirm Emergency Alert</h3>
           <p>This will:</p>
           <ul class="modal-list">
-            <li>📍 Capture your GPS location</li>
-            <li>📱 Send SMS to all emergency contacts</li>
-            <li>📞 Make voice call to all contacts</li>
+            <li>📍 Capture your exact GPS location</li>
+            <li>💬 Send WhatsApp with location to contacts</li>
             <li>📧 Send email alert to all contacts</li>
-            <li>💾 Log alert in your history</li>
+            <li>🔊 Activate loud emergency alarm</li>
           </ul>
           <p class="modal-warning">Are you sure this is an emergency?</p>
           <div class="modal-actions">
-            <button class="btn btn-secondary" id="modalCancel">Cancel</button>
-            <button class="btn btn-danger" id="modalConfirm">
+            <button class="btn btn-secondary" id="modalCancel" type="button">Cancel</button>
+            <button class="btn btn-danger" id="modalConfirm" type="button">
               <span class="btn-text">🚨 Send SOS Alert</span>
               <span class="btn-loader hidden"></span>
             </button>
@@ -109,7 +136,7 @@
         </div>
       </div>
 
-      <!-- Alert Progress Modal -->
+      <!-- Progress Modal -->
       <div class="modal-overlay hidden" id="progressModal">
         <div class="modal progress-modal" role="dialog" aria-modal="true">
           <h3>🚨 Sending SOS Alert...</h3>
@@ -126,16 +153,21 @@
               <span class="progress-icon">⏳</span>
               <span class="progress-text">Sending email alerts...</span>
             </div>
-            <div class="progress-item" id="progressSMS">
+            <div class="progress-item" id="progressWhatsApp">
               <span class="progress-icon">⏳</span>
-              <span class="progress-text">Triggering SMS & Calls (Cloud)...</span>
+              <span class="progress-text">Sending WhatsApp messages...</span>
+            </div>
+            <div class="progress-item" id="progressAudio">
+              <span class="progress-icon">⏳</span>
+              <span class="progress-text">Activating emergency alarm...</span>
             </div>
           </div>
           <p class="progress-note" id="progressNote">Please wait...</p>
+          <button class="btn btn-secondary btn-full hidden" id="progressClose" type="button">Close</button>
         </div>
       </div>
 
-      <!-- Quick Info Cards -->
+      <!-- Info Cards -->
       <div class="info-cards">
         <div class="info-card">
           <div class="info-card-icon">👥</div>
@@ -160,17 +192,27 @@
         </div>
       </div>
 
+      <!-- Current Location Preview -->
+      <div class="location-preview hidden" id="locationPreview">
+        <h3 class="section-title">📍 Your Current Location</h3>
+        <div class="location-card">
+          <p class="location-coords" id="locationCoords">Fetching...</p>
+          <a href="#" id="locationMapLink" target="_blank" rel="noopener noreferrer" class="btn btn-small btn-primary">
+            🗺️ Open in Google Maps
+          </a>
+        </div>
+      </div>
+
       <!-- Last Alert Preview -->
       <div class="last-alert-section hidden" id="lastAlertSection">
         <h3 class="section-title">Last Alert</h3>
-        <div class="last-alert-card" id="lastAlertCard">
+        <div class="last-alert-card">
           <div class="last-alert-time" id="lastAlertTime">--</div>
           <div class="last-alert-location">
             <a href="#" id="lastAlertLink" target="_blank" rel="noopener noreferrer">📍 View on Google Maps</a>
           </div>
           <div class="last-alert-badges">
-            <span class="mini-badge" id="lastSmsStatus">SMS: --</span>
-            <span class="mini-badge" id="lastCallStatus">Call: --</span>
+            <span class="mini-badge" id="lastWhatsappStatus">WhatsApp: --</span>
             <span class="mini-badge" id="lastEmailStatus">Email: --</span>
           </div>
         </div>
@@ -186,7 +228,7 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- SOS Alarm Audio -->
+  <!-- Alarm Audio -->
   <audio id="sosAlarmAudio" src="/assets/audio/sos-alarm.mp3" preload="auto" loop></audio>
 
   <script type="module" src="/js/firebase.js"></script>
