@@ -164,3 +164,86 @@
   .settings-row{flex-direction:column;align-items:flex-start;gap:6px}
   .settings-row.clickable{flex-direction:row;align-items:center}
 }
+/* ═══════════════════════════════════════ */
+/* WHATSAPP + VOICE + SAFE BUTTON STYLES  */
+/* ═══════════════════════════════════════ */
+
+.whatsapp-badge { background: #dcfce7; color: #16a34a; }
+body[data-theme="dark"] .whatsapp-badge { background: rgba(34,197,94,0.1); }
+
+.voice-badge { background: #fef3c7; color: #d97706; }
+body[data-theme="dark"] .voice-badge { background: rgba(245,158,11,0.1); }
+
+.audio-badge { background: var(--accent-danger-light); color: var(--accent-danger); }
+
+/* Voice Status in Topbar */
+.voice-status { display:flex; align-items:center; gap:4px; padding:4px 10px; border-radius:var(--radius-xl); font-size:0.7rem; font-weight:600; background:var(--bg-tertiary); border:1px solid var(--border-color); }
+.voice-dot { width:8px; height:8px; border-radius:var(--radius-full); background:var(--text-tertiary); transition:background var(--transition-fast); }
+.voice-dot.active { background:#ef4444; box-shadow:0 0 6px rgba(239,68,68,0.5); animation:voicePulse 1s ease-in-out infinite; }
+@keyframes voicePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Voice Trigger Section */
+.voice-trigger-section { width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.voice-toggle-btn { display:flex; align-items:center; gap:8px; padding:10px 20px; border:2px solid var(--border-color); border-radius:var(--radius-xl); background:var(--card-bg); color:var(--text-primary); font-family:var(--font-family); font-size:0.88rem; font-weight:600; cursor:pointer; transition:all var(--transition-fast); box-shadow:var(--card-shadow); }
+.voice-toggle-btn:hover { border-color:var(--accent-secondary); background:var(--bg-hover); }
+.voice-toggle-btn.voice-active { border-color:#ef4444; background:rgba(239,68,68,0.05); color:#ef4444; animation:voiceBtnPulse 2s ease-in-out infinite; }
+@keyframes voiceBtnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)} 50%{box-shadow:0 0 0 8px rgba(239,68,68,0)} }
+.voice-toggle-icon { font-size:1.2rem; }
+.voice-hint { font-size:0.78rem; color:var(--text-tertiary); text-align:center; }
+
+/* Location Preview */
+.location-preview { width:100%; }
+.location-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; box-shadow:var(--card-shadow); flex-wrap:wrap; }
+.location-coords { font-size:0.85rem; font-weight:600; color:var(--text-primary); font-family:monospace; }
+
+/* I'M SAFE Section */
+.safe-section { width:100%; display:flex; flex-direction:column; align-items:center; gap:16px; animation:fadeInUp 0.5s ease; }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+.alarm-active-indicator { display:flex; align-items:center; gap:10px; padding:10px 20px; background:var(--accent-danger-light); border:2px solid var(--accent-danger); border-radius:var(--radius-xl); animation:alarmFlash 1s ease-in-out infinite; }
+.alarm-icon { font-size:1.2rem; animation:alarmShake 0.5s ease-in-out infinite; }
+.alarm-text { font-size:0.85rem; font-weight:800; color:var(--accent-danger); letter-spacing:2px; text-transform:uppercase; }
+@keyframes alarmFlash { 0%,100%{opacity:1;border-color:var(--accent-danger)} 50%{opacity:0.7;border-color:transparent} }
+@keyframes alarmShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-15deg)} 75%{transform:rotate(15deg)} }
+
+.safe-button { position:relative; width:200px; height:200px; border-radius:var(--radius-full); border:none; background:linear-gradient(135deg,#16a34a,#15803d); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform var(--transition-fast),box-shadow var(--transition-fast); box-shadow:0 0 60px rgba(22,163,74,0.3); z-index:1; }
+.safe-button:hover { transform:scale(1.05); box-shadow:0 0 80px rgba(22,163,74,0.4); }
+.safe-button:active { transform:scale(0.97); }
+
+.safe-pulse { position:absolute; inset:0; border-radius:var(--radius-full); background:#16a34a; opacity:0; animation:sosPulse 2.5s ease-out infinite; z-index:0; }
+.safe-pulse.delay { animation-delay:1.25s; }
+
+.safe-inner { display:flex; flex-direction:column; align-items:center; gap:6px; z-index:2; position:relative; }
+.safe-icon { font-size:2.5rem; }
+.safe-label { font-size:1.4rem; font-weight:900; color:#fff; letter-spacing:3px; text-shadow:0 2px 4px rgba(0,0,0,0.2); }
+.safe-sublabel { font-size:0.72rem; color:rgba(255,255,255,0.85); font-weight:500; }
+.safe-hint { font-size:0.78rem; color:var(--text-tertiary); text-align:center; }
+
+/* Alarm Active Body Effects */
+body.alarm-active::before { content:''; position:fixed; inset:0; border:4px solid var(--accent-danger); pointer-events:none; z-index:9998; animation:borderFlash 0.8s ease-in-out infinite; }
+@keyframes borderFlash { 0%,100%{border-color:var(--accent-danger);opacity:1} 50%{border-color:transparent;opacity:0.3} }
+
+body.alarm-active .topbar { background:var(--accent-danger)!important; border-bottom-color:var(--accent-primary-hover)!important; }
+body.alarm-active .topbar .logo-name,
+body.alarm-active .topbar .btn-icon,
+body.alarm-active .topbar .profile-avatar,
+body.alarm-active .topbar .voice-label { color:#fff!important; }
+body.alarm-active .topbar .logo-icon-small { animation:alarmShake 0.3s ease-in-out infinite; }
+
+body.alarm-active .status-badge { background:var(--accent-danger-light); border-color:var(--accent-danger); animation:statusPulse 1s ease-in-out infinite; }
+@keyframes statusPulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.4)} 50%{box-shadow:0 0 0 12px rgba(220,38,38,0)} }
+body.alarm-active .info-card { border-color:rgba(220,38,38,0.3); }
+
+/* Mobile */
+@media(max-width:480px){
+  .safe-button{width:170px;height:170px}
+  .safe-label{font-size:1.2rem}
+  .safe-icon{font-size:2rem}
+  .alarm-active-indicator{padding:8px 14px}
+  .alarm-text{font-size:0.75rem;letter-spacing:1px}
+  .voice-toggle-btn{padding:8px 16px;font-size:0.82rem}
+  .alert-methods{gap:4px}
+  .method-badge{padding:4px 8px;font-size:0.68rem}
+  .location-card{flex-direction:column;align-items:flex-start}
+  .voice-status{display:none}
+}
