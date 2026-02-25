@@ -1,9 +1,3 @@
-/**
- * ═══════════════════════════════════════════════════════════════
- * SOS MODULE
- * Features: GPS + WhatsApp + Email + Alarm + Voice Trigger + I'M SAFE
- * ═══════════════════════════════════════════════════════════════
- */
 import { auth, db } from './firebase.js';
 import { getCurrentUser } from './navigation.js';
 import {
@@ -11,11 +5,14 @@ import {
   query, orderBy, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
+
 const EMAILJS_PUBLIC_KEY = "iffnx5J7YOcNkpma3";       
 const EMAILJS_SERVICE_ID = "service_enahgir";       
-const EMAILJS_TEMPLATE_ID = "template_2b4t0sg";
+const EMAILJS_TEMPLATE_ID = "template_2b4t0sg"; 
 
+// ═══════════════════════════════════════
 // DOM REFERENCES
+// ═══════════════════════════════════════
 const sosButton = document.getElementById('sosButton');
 const sosSection = document.getElementById('sosSection');
 const sosModal = document.getElementById('sosModal');
@@ -52,7 +49,10 @@ const voiceHint = document.getElementById('voiceHint');
 const voiceDot = document.getElementById('voiceDot');
 const voiceLabel = document.getElementById('voiceLabel');
 
+
+// ═══════════════════════════════════════
 // GLOBAL STATE
+// ═══════════════════════════════════════
 let isAlarmActive = false;
 let currentAlertDocId = null;
 let alarmAudio = null;
@@ -64,13 +64,26 @@ let voiceRecognition = null;
 let isVoiceActive = false;
 let fallbackInterval = null;
 let fallbackAudioCtx = null;
+let voiceRestartCount = 0;
+const MAX_VOICE_RESTARTS = 3;
 
+// ═══════════════════════════════════════
 // INIT EMAILJS
-if (typeof emailjs !== 'undefined') {
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+// ═══════════════════════════════════════
+try {
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    console.log('📧 EmailJS initialized');
+  } else {
+    console.warn('📧 EmailJS not loaded - email alerts will not work');
+  }
+} catch (e) {
+  console.warn('📧 EmailJS init error:', e);
 }
 
-// AUTH READY - Load data when user logs in
+// ═══════════════════════════════════════
+// AUTH READY
+// ═══════════════════════════════════════
 window.addEventListener('authReady', async (e) => {
   const user = e.detail.user;
   await loadDashboardData(user);
@@ -78,7 +91,10 @@ window.addEventListener('authReady', async (e) => {
   await loadAllContacts(user);
 });
 
-// FEATURE 1: GPS LOCATION - EXACT COORDINATES
+// ═══════════════════════════════════════════════════════
+// GPS LOCATION - WITH FALLBACK FOR LAPTOP
+// ═══════════════════════════════════════════════════════
+
 async function fetchCurrentLocation() {
   if (!navigator.geolocation) {
     if (locationStatus) locationStatus.textContent = 'Not Supported';
@@ -86,41 +102,88 @@ async function fetchCurrentLocation() {
   }
 
   try {
+    // Try HIGH accuracy first (GPS - works on phone)
     const position = await new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
         enableHighAccuracy: true,
-        timeout: 20000,
+        timeout: 10000,
         maximumAge: 0
       });
     });
 
-    currentLatitude = position.coords.latitude;
-    currentLongitude = position.coords.longitude;
+    setLocation(position);
+    console.log('📍 High accuracy GPS location obtained');
+
+  } catch (highAccError) {
+    console.log('📍 High accuracy failed, trying low accuracy...');
+
+    try {
+      // Try LOW accuracy (WiFi/IP based - works on laptop)
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 60000
+        });
+      });
+
+      setLocation(position);
+      console.log('📍 Low accuracy location obtained (WiFi/IP based)');
+
+    } catch (lowAccError) {
+      console.log('📍 Browser geolocation failed, trying IP-based location...');
+
+      // FALLBACK: IP-based location (works everywhere)
+      try {
+        await fetchIPLocation();
+      } catch (ipError) {
+        console.error('📍 All location methods failed');
+        if (locationStatus) {
+          locationStatus.textContent = 'Unavailable';
+          locationStatus.style.color = 'var(--accent-danger)';
+        }
+      }
+    }
+  }
+}
+
+function setLocation(position) {
+  currentLatitude = position.coords.latitude;
+  currentLongitude = position.coords.longitude;
+  currentMapsLink = `https://www.google.com/maps?q=${currentLatitude},${currentLongitude}`;
+
+  if (locationStatus) {
+    locationStatus.textContent = 'Active';
+    locationStatus.style.color = 'var(--accent-success)';
+  }
+  if (locationPreview) locationPreview.classList.remove('hidden');
+  if (locationCoords) {
+    locationCoords.textContent = `Lat: ${currentLatitude.toFixed(6)}, Lng: ${currentLongitude.toFixed(6)}`;
+  }
+  if (locationMapLink) locationMapLink.href = currentMapsLink;
+}
+
+// IP-based location fallback (free API, no key needed)
+async function fetchIPLocation() {
+  const response = await fetch('https://ipapi.co/json/');
+  const data = await response.json();
+
+  if (data.latitude && data.longitude) {
+    currentLatitude = data.latitude;
+    currentLongitude = data.longitude;
     currentMapsLink = `https://www.google.com/maps?q=${currentLatitude},${currentLongitude}`;
 
-    // Update status
     if (locationStatus) {
-      locationStatus.textContent = 'Active';
-      locationStatus.style.color = 'var(--accent-success)';
+      locationStatus.textContent = 'Approx';
+      locationStatus.style.color = 'var(--accent-warning)';
     }
-
-    // Show preview
     if (locationPreview) locationPreview.classList.remove('hidden');
     if (locationCoords) {
-      locationCoords.textContent = `Lat: ${currentLatitude.toFixed(6)}, Lng: ${currentLongitude.toFixed(6)}`;
+      locationCoords.textContent = `Lat: ${currentLatitude.toFixed(4)}, Lng: ${currentLongitude.toFixed(4)} (Approximate)`;
     }
-    if (locationMapLink) {
-      locationMapLink.href = currentMapsLink;
-    }
+    if (locationMapLink) locationMapLink.href = currentMapsLink;
 
-    console.log('📍 Location ready:', currentLatitude, currentLongitude);
-
-  } catch (error) {
-    console.error('GPS Error:', error);
-    if (locationStatus) {
-      locationStatus.textContent = error.code === 1 ? 'Denied' : 'Error';
-      locationStatus.style.color = 'var(--accent-danger)';
-    }
+    console.log('📍 IP-based location:', currentLatitude, currentLongitude);
   }
 }
 
@@ -130,15 +193,29 @@ function getGeolocation() {
       reject(new Error('Geolocation not supported'));
       return;
     }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 0
-    });
+
+    // Try high accuracy first
+    navigator.geolocation.getCurrentPosition(resolve,
+      () => {
+        // If high accuracy fails, try low accuracy
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 60000
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   });
 }
 
-// LOAD ALL CONTACTS FROM FIRESTORE
+// ═══════════════════════════════════════
+// LOAD CONTACTS
+// ═══════════════════════════════════════
 async function loadAllContacts(user) {
   try {
     const snapshot = await getDocs(collection(db, 'users', user.uid, 'contacts'));
@@ -152,18 +229,21 @@ async function loadAllContacts(user) {
   }
 }
 
-// FEATURE 2: I'M SAFE BUTTON - STOPS EVERYTHING
+// ═══════════════════════════════════════════════════════
+// I'M SAFE BUTTON
+// ═══════════════════════════════════════════════════════
+
 if (safeButton) {
   safeButton.addEventListener('click', async () => {
     console.log('🛡️ I AM SAFE pressed');
 
-    // 1. Stop alarm sound
+    // 1. Stop alarm
     stopAlarm();
 
-    // 2. Reset UI to safe mode
+    // 2. Reset UI
     resetStatusSafe();
 
-    // 3. Update Firestore alert status
+    // 3. Update Firestore
     if (currentAlertDocId) {
       try {
         const user = auth.currentUser;
@@ -176,18 +256,19 @@ if (safeButton) {
               resolvedAt: serverTimestamp()
             }
           );
-          console.log('✅ Alert marked resolved');
+          console.log('✅ Alert resolved in Firestore');
         }
       } catch (error) {
         console.error('Firestore update error:', error);
+        // Don't block - alarm already stopped
       }
       currentAlertDocId = null;
     }
 
-    // 4. Show confirmation
+    // 4. Toast
     showToast('🛡️ You are marked as SAFE. Alarm stopped.', 'success');
 
-    // 5. Enable SOS button again
+    // 5. Re-enable SOS
     if (sosButton) {
       sosButton.disabled = false;
       const sublabel = sosButton.querySelector('.sos-sublabel');
@@ -196,7 +277,10 @@ if (safeButton) {
   });
 }
 
-// FEATURE 3: WHATSAPP MESSAGE + LOCATION
+// ═══════════════════════════════════════════════════════
+// WHATSAPP MESSAGE + LOCATION
+// ═══════════════════════════════════════════════════════
+
 function sendWhatsAppToContacts(contacts, mapsLink, latitude, longitude) {
   const phoneContacts = contacts.filter(c => c.phone);
   if (phoneContacts.length === 0) {
@@ -210,46 +294,44 @@ function sendWhatsAppToContacts(contacts, mapsLink, latitude, longitude) {
     `📍 *My Exact Location:*\n` +
     `Latitude: ${latitude.toFixed(6)}\n` +
     `Longitude: ${longitude.toFixed(6)}\n\n` +
-    `🗺️ *Click to see my location on Google Maps:*\n` +
+    `🗺️ *Click to open my location:*\n` +
     `${mapsLink}\n\n` +
     `⏰ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\n\n` +
     `Please respond IMMEDIATELY! 🆘`
   );
 
-  let sentCount = 0;
-
   phoneContacts.forEach((contact, index) => {
-    // Clean phone number
     let phone = contact.phone.replace(/[\s\-\(\)\+]/g, '');
-
-    // Add India country code if 10 digit number
     if (phone.length === 10 && !phone.startsWith('91')) {
       phone = '91' + phone;
     }
 
     const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
 
-    // Open each with delay so browser doesn't block
     setTimeout(() => {
       window.open(whatsappUrl, '_blank');
-      sentCount++;
-      console.log(`💬 WhatsApp opened for ${contact.name} (${phone})`);
-    }, index * 2000); // 2 second gap
+      console.log(`💬 WhatsApp opened for ${contact.name}`);
+    }, index * 2000);
   });
 
   return phoneContacts.length;
 }
 
-// FEATURE 4: VOICE TRIGGER - Say "HELP" / "EMERGENCY"
+// ═══════════════════════════════════════════════════════
+// VOICE TRIGGER - FIXED FOR LAPTOP
+// ═══════════════════════════════════════════════════════
 
 function initVoiceTrigger() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
-    console.warn('Speech Recognition not supported in this browser');
-    if (voiceToggleBtn) voiceToggleBtn.style.display = 'none';
-    if (voiceHint) voiceHint.textContent = 'Voice trigger not supported in this browser';
-    return;
+    console.warn('🎤 Speech Recognition not supported');
+    if (voiceToggleBtn) {
+      voiceToggleBtn.style.opacity = '0.5';
+      voiceToggleText.textContent = 'Voice Not Supported';
+    }
+    if (voiceHint) voiceHint.textContent = 'Voice trigger not supported. Use Chrome or Edge browser.';
+    return false;
   }
 
   voiceRecognition = new SpeechRecognition();
@@ -258,7 +340,6 @@ function initVoiceTrigger() {
   voiceRecognition.lang = 'en-IN';
   voiceRecognition.maxAlternatives = 5;
 
-  // Words that trigger SOS
   const TRIGGER_WORDS = [
     'help', 'help me', 'emergency', 'sos',
     'save me', 'danger', 'bachao', 'madad',
@@ -266,18 +347,26 @@ function initVoiceTrigger() {
   ];
 
   voiceRecognition.onresult = (event) => {
+    // Reset restart counter on successful result
+    voiceRestartCount = 0;
+
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const transcript = event.results[i][0].transcript.toLowerCase().trim();
-      console.log('🎤 Heard:', transcript);
 
-      // Check for trigger words
+      // Only log final results to reduce noise
+      if (event.results[i].isFinal) {
+        console.log('🎤 Heard (final):', transcript);
+      }
+
       const triggered = TRIGGER_WORDS.some(word => transcript.includes(word));
 
       if (triggered && !isAlarmActive) {
         console.log('🚨 VOICE TRIGGER DETECTED!');
         showToast('🎤 Voice detected: "' + transcript + '" - Triggering SOS!', 'info');
 
-        // Small delay then trigger SOS directly (no confirmation modal)
+        // Stop listening temporarily
+        try { voiceRecognition.stop(); } catch (e) { /* ignore */ }
+
         setTimeout(() => {
           triggerSOSDirectly();
         }, 500);
@@ -287,49 +376,114 @@ function initVoiceTrigger() {
   };
 
   voiceRecognition.onerror = (event) => {
-    console.error('Speech error:', event.error);
+    // Handle different error types
+    switch (event.error) {
+      case 'not-allowed':
+        console.error('🎤 Microphone permission DENIED');
+        showToast('🎤 Microphone blocked! Allow microphone in browser settings.', 'error');
+        stopVoiceTrigger();
+        break;
 
-    if (event.error === 'not-allowed') {
-      showToast('🎤 Microphone permission denied. Allow microphone access.', 'error');
-      stopVoiceTrigger();
-      return;
-    }
+      case 'audio-capture':
+        // This means no microphone found OR mic is busy
+        console.warn('🎤 audio-capture error - mic may be unavailable');
+        voiceRestartCount++;
 
-    // Auto restart on other errors
-    if (isVoiceActive) {
-      setTimeout(() => {
-        try {
-          if (isVoiceActive) voiceRecognition.start();
-        } catch (e) { /* ignore */ }
-      }, 1000);
+        if (voiceRestartCount >= MAX_VOICE_RESTARTS) {
+          console.error('🎤 Too many mic errors. Stopping voice trigger.');
+          showToast('🎤 Microphone not available. Check mic settings.', 'error');
+          stopVoiceTrigger();
+        } else if (isVoiceActive) {
+          // Retry after delay
+          setTimeout(() => {
+            if (isVoiceActive) {
+              try { voiceRecognition.start(); } catch (e) { /* ignore */ }
+            }
+          }, 3000);
+        }
+        break;
+
+      case 'no-speech':
+        // No speech detected - this is normal, just restart
+        if (isVoiceActive) {
+          try { voiceRecognition.start(); } catch (e) { /* ignore */ }
+        }
+        break;
+
+      case 'network':
+        console.warn('🎤 Network error in speech recognition');
+        if (isVoiceActive) {
+          setTimeout(() => {
+            if (isVoiceActive) {
+              try { voiceRecognition.start(); } catch (e) { /* ignore */ }
+            }
+          }, 5000);
+        }
+        break;
+
+      default:
+        console.warn('🎤 Speech error:', event.error);
+        if (isVoiceActive) {
+          setTimeout(() => {
+            if (isVoiceActive) {
+              try { voiceRecognition.start(); } catch (e) { /* ignore */ }
+            }
+          }, 2000);
+        }
     }
   };
 
   voiceRecognition.onend = () => {
-    // Keep listening if voice trigger is ON
     if (isVoiceActive) {
-      try {
-        voiceRecognition.start();
-      } catch (e) { /* ignore */ }
+      // Small delay before restart to prevent rapid cycling
+      setTimeout(() => {
+        if (isVoiceActive) {
+          try { voiceRecognition.start(); } catch (e) { /* ignore */ }
+        }
+      }, 500);
     }
   };
 
   console.log('🎤 Voice trigger initialized');
+  return true;
 }
 
-function startVoiceTrigger() {
-  if (!voiceRecognition) initVoiceTrigger();
-  if (!voiceRecognition) return;
+async function startVoiceTrigger() {
+  if (!voiceRecognition) {
+    const success = initVoiceTrigger();
+    if (!success) {
+      showToast('🎤 Voice trigger not available in this browser', 'error');
+      return;
+    }
+  }
 
+  // Reset restart counter
+  voiceRestartCount = 0;
   isVoiceActive = true;
 
+  // Request microphone permission explicitly first
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Got permission! Stop the test stream
+    stream.getTracks().forEach(track => track.stop());
+    console.log('🎤 Microphone permission granted');
+  } catch (micError) {
+    console.error('🎤 Microphone permission denied:', micError);
+    showToast('🎤 Microphone access denied. Please allow microphone in browser settings.', 'error');
+    isVoiceActive = false;
+    return;
+  }
+
+  // Now start recognition
   try {
     voiceRecognition.start();
-  } catch (e) { /* already started */ }
+  } catch (e) {
+    console.warn('🎤 Start error (may already be running):', e);
+  }
 
   // Update UI
   if (voiceToggleIcon) voiceToggleIcon.textContent = '🔴';
-  if (voiceToggleText) voiceToggleText.textContent = 'Voice Trigger ON - Listening...';
+  if (voiceToggleText) voiceToggleText.textContent = 'Voice Trigger ON';
   if (voiceToggleBtn) voiceToggleBtn.classList.add('voice-active');
   if (voiceDot) voiceDot.classList.add('active');
   if (voiceLabel) voiceLabel.textContent = '🎤 ON';
@@ -340,12 +494,12 @@ function startVoiceTrigger() {
 
 function stopVoiceTrigger() {
   isVoiceActive = false;
+  voiceRestartCount = 0;
 
   if (voiceRecognition) {
     try { voiceRecognition.stop(); } catch (e) { /* ignore */ }
   }
 
-  // Update UI
   if (voiceToggleIcon) voiceToggleIcon.textContent = '🎤';
   if (voiceToggleText) voiceToggleText.textContent = 'Enable Voice Trigger';
   if (voiceToggleBtn) voiceToggleBtn.classList.remove('voice-active');
@@ -354,7 +508,7 @@ function stopVoiceTrigger() {
   if (voiceHint) voiceHint.innerHTML = 'Say <strong>"HELP"</strong> or <strong>"EMERGENCY"</strong> to trigger SOS';
 }
 
-// Voice toggle button click
+// Voice toggle button
 if (voiceToggleBtn) {
   voiceToggleBtn.addEventListener('click', () => {
     if (isVoiceActive) {
@@ -365,17 +519,14 @@ if (voiceToggleBtn) {
   });
 }
 
-// Initialize voice system
-initVoiceTrigger();
-
-
-// ALARM SOUND SYSTEM (MP3 + Fallback)
+// ═══════════════════════════════════════════════════════
+// ALARM SOUND (MP3 + Fallback)
+// ═══════════════════════════════════════════════════════
 
 function startAlarm() {
   if (isAlarmActive) return;
   isAlarmActive = true;
 
-  // Try MP3 first
   alarmAudio = document.getElementById('sosAlarmAudio');
   if (!alarmAudio) {
     alarmAudio = new Audio('/assets/audio/sos-alarm.mp3');
@@ -388,53 +539,40 @@ function startAlarm() {
   alarmAudio.play()
     .then(() => console.log('🔊 MP3 Alarm playing'))
     .catch(() => {
-      console.log('🔊 MP3 failed, using fallback alarm');
+      console.log('🔊 MP3 failed, using fallback');
       playFallbackAlarm();
     });
 
-  // Show I'M SAFE button, hide SOS button
   if (safeSection) safeSection.classList.remove('hidden');
   if (sosSection) sosSection.classList.add('hidden');
-
-  // Red flashing effects
   document.body.classList.add('alarm-active');
-
   console.log('🔊 Alarm STARTED');
 }
 
 function stopAlarm() {
   isAlarmActive = false;
 
-  // Stop MP3
   if (alarmAudio) {
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
     alarmAudio.loop = false;
   }
 
-  // Stop fallback
   if (fallbackInterval) {
     clearInterval(fallbackInterval);
     fallbackInterval = null;
   }
 
-  // Show SOS button, hide I'M SAFE
   if (safeSection) safeSection.classList.add('hidden');
   if (sosSection) sosSection.classList.remove('hidden');
-
-  // Remove red effects
   document.body.classList.remove('alarm-active');
-
   console.log('🔇 Alarm STOPPED');
 }
 
 function playFallbackAlarm() {
   try {
     fallbackAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  } catch (e) {
-    console.error('Web Audio not supported');
-    return;
-  }
+  } catch (e) { return; }
 
   function beep() {
     if (!isAlarmActive) return;
@@ -457,11 +595,13 @@ function playFallbackAlarm() {
   fallbackInterval = setInterval(beep, 800);
 }
 
-// EMAIL ALERTS (EmailJS)
 // ═══════════════════════════════════════════════════════
+// EMAIL ALERTS
+// ═══════════════════════════════════════════════════════
+
 async function sendEmailAlerts(user, mapsLink, latitude, longitude) {
   if (typeof emailjs === 'undefined') {
-    console.warn('EmailJS not loaded');
+    console.warn('EmailJS not available');
     return 0;
   }
 
@@ -479,7 +619,7 @@ async function sendEmailAlerts(user, mapsLink, latitude, longitude) {
       user_email: user.email,
       maps_link: mapsLink,
       timestamp: timestamp,
-      message: `🚨 EMERGENCY! ${user.displayName || 'SOS User'} needs help!\n\n📍 Location: Lat ${latitude.toFixed(6)}, Lng ${longitude.toFixed(6)}\n🗺️ Google Maps: ${mapsLink}\n\nPlease respond immediately!`
+      message: `🚨 EMERGENCY! ${user.displayName || 'SOS User'} needs help!\n📍 Location: Lat ${latitude.toFixed(6)}, Lng ${longitude.toFixed(6)}\n🗺️ Google Maps: ${mapsLink}\nPlease respond immediately!`
     };
 
     const p = emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
@@ -493,33 +633,30 @@ async function sendEmailAlerts(user, mapsLink, latitude, longitude) {
   return emailContacts.length;
 }
 
-// SOS BUTTON CLICK → SHOW MODAL
 // ═══════════════════════════════════════════════════════
+// SOS BUTTON HANDLERS
+// ═══════════════════════════════════════════════════════
+
 if (sosButton) {
   sosButton.addEventListener('click', () => {
     if (sosModal) sosModal.classList.remove('hidden');
   });
 }
-
 if (modalCancel) {
   modalCancel.addEventListener('click', () => {
     if (sosModal) sosModal.classList.add('hidden');
   });
 }
-
 if (sosModal) {
   sosModal.addEventListener('click', (e) => {
     if (e.target === sosModal) sosModal.classList.add('hidden');
   });
 }
-
 if (progressClose) {
   progressClose.addEventListener('click', () => {
     if (progressModal) progressModal.classList.add('hidden');
   });
 }
-
-// Confirm button → trigger SOS
 if (modalConfirm) {
   modalConfirm.addEventListener('click', () => {
     if (sosModal) sosModal.classList.add('hidden');
@@ -527,9 +664,10 @@ if (modalConfirm) {
   });
 }
 
-// MAIN SOS FUNCTION - TRIGGERS EVERYTHING
-// Called from: Button confirm OR Voice trigger
 // ═══════════════════════════════════════════════════════
+// MAIN SOS FUNCTION
+// ═══════════════════════════════════════════════════════
+
 async function triggerSOSDirectly() {
   const user = auth.currentUser;
   if (!user) {
@@ -542,7 +680,6 @@ async function triggerSOSDirectly() {
     return;
   }
 
-  // Show progress
   if (progressModal) progressModal.classList.remove('hidden');
   if (progressClose) progressClose.classList.add('hidden');
   resetProgress();
@@ -550,16 +687,14 @@ async function triggerSOSDirectly() {
   let latitude, longitude, mapsLink;
 
   try {
-
-    // ═══ STEP 1: GET EXACT GPS ═══
-    updateProgress(progressGPS, 'loading', 'Capturing exact GPS location...');
+    // ═══ STEP 1: GPS ═══
+    updateProgress(progressGPS, 'loading', 'Capturing GPS location...');
 
     try {
       const position = await getGeolocation();
       latitude = position.coords.latitude;
       longitude = position.coords.longitude;
       mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
       currentLatitude = latitude;
       currentLongitude = longitude;
       currentMapsLink = mapsLink;
@@ -568,87 +703,92 @@ async function triggerSOSDirectly() {
         `📍 Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`
       );
 
-      // Update preview
       if (locationCoords) locationCoords.textContent = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
       if (locationMapLink) locationMapLink.href = mapsLink;
       if (locationPreview) locationPreview.classList.remove('hidden');
 
     } catch (gpsError) {
+      // Use saved location or IP location
       if (currentLatitude && currentLongitude) {
         latitude = currentLatitude;
         longitude = currentLongitude;
         mapsLink = currentMapsLink;
-        updateProgress(progressGPS, 'done', '📍 Using last known location');
+        updateProgress(progressGPS, 'done', '📍 Using previously captured location');
       } else {
-        latitude = 0;
-        longitude = 0;
-        mapsLink = 'https://www.google.com/maps';
-        updateProgress(progressGPS, 'error', '⚠️ GPS unavailable');
+        // Last resort: try IP location
+        try {
+          await fetchIPLocation();
+          latitude = currentLatitude;
+          longitude = currentLongitude;
+          mapsLink = currentMapsLink;
+          updateProgress(progressGPS, 'done', '📍 Using approximate IP location');
+        } catch (e) {
+          latitude = 0;
+          longitude = 0;
+          mapsLink = 'https://www.google.com/maps';
+          updateProgress(progressGPS, 'error', '⚠️ Location unavailable');
+        }
       }
     }
 
     // ═══ STEP 2: SAVE TO FIRESTORE ═══
     updateProgress(progressSave, 'loading', 'Saving to database...');
 
-    const alertData = {
-      timestamp: serverTimestamp(),
-      latitude,
-      longitude,
-      mapsLink,
-      status: 'active',
-      emailSent: false,
-      whatsappSent: false,
-      alarmActive: true
-    };
-
     const alertDoc = await addDoc(
       collection(db, 'users', user.uid, 'sos_history'),
-      alertData
+      {
+        timestamp: serverTimestamp(),
+        latitude,
+        longitude,
+        mapsLink,
+        status: 'active',
+        emailSent: false,
+        whatsappSent: false,
+        alarmActive: true
+      }
     );
     currentAlertDocId = alertDoc.id;
     updateProgress(progressSave, 'done', '✅ Saved to database');
 
-    // ═══ STEP 3: SEND EMAILS ═══
+    // ═══ STEP 3: EMAIL ═══
     updateProgress(progressEmail, 'loading', 'Sending emails...');
     try {
       const emailCount = await sendEmailAlerts(user, mapsLink, latitude, longitude);
       if (emailCount > 0) {
         updateProgress(progressEmail, 'done', `✅ ${emailCount} email(s) sent`);
-        await updateDoc(doc(db, 'users', user.uid, 'sos_history', currentAlertDocId), { emailSent: true });
+        // Update Firestore (don't await - non-blocking)
+        updateDoc(doc(db, 'users', user.uid, 'sos_history', currentAlertDocId), { emailSent: true }).catch(e => console.warn('Email status update failed:', e));
       } else {
         updateProgress(progressEmail, 'error', '⚠️ No contacts with email');
       }
     } catch (emailErr) {
-      console.error('Email error:', emailErr);
       updateProgress(progressEmail, 'error', '⚠️ Email failed');
     }
 
-    // ═══ STEP 4: SEND WHATSAPP ═══
+    // ═══ STEP 4: WHATSAPP ═══
     updateProgress(progressWhatsApp, 'loading', 'Opening WhatsApp...');
     try {
       const waCount = sendWhatsAppToContacts(allContacts, mapsLink, latitude, longitude);
       if (waCount > 0) {
         updateProgress(progressWhatsApp, 'done', `✅ WhatsApp opening for ${waCount} contact(s)`);
-        await updateDoc(doc(db, 'users', user.uid, 'sos_history', currentAlertDocId), { whatsappSent: true });
+        updateDoc(doc(db, 'users', user.uid, 'sos_history', currentAlertDocId), { whatsappSent: true }).catch(e => console.warn('WA status update failed:', e));
       } else {
-        updateProgress(progressWhatsApp, 'error', '⚠️ No contacts with phone number');
+        updateProgress(progressWhatsApp, 'error', '⚠️ No contacts with phone');
       }
     } catch (waErr) {
-      console.error('WhatsApp error:', waErr);
       updateProgress(progressWhatsApp, 'error', '⚠️ WhatsApp failed');
     }
 
-    // ═══ STEP 5: START ALARM ═══
+    // ═══ STEP 5: ALARM ═══
     updateProgress(progressAudio, 'loading', 'Starting alarm...');
     startAlarm();
     updateProgress(progressAudio, 'done', '🔊 Alarm ACTIVE');
 
-    // Done!
     if (progressNote) progressNote.textContent = '🎉 All alerts sent! Press "I\'M SAFE" when safe.';
     if (progressClose) progressClose.classList.remove('hidden');
 
     updateStatusAlert();
-    showToast('🚨 SOS sent! Press I\'M SAFE to stop alarm.', 'success');
+    showToast('🚨 SOS sent! Press I\'M SAFE to stop.', 'success');
 
     await loadDashboardData(user);
 
@@ -656,18 +796,19 @@ async function triggerSOSDirectly() {
     console.error('SOS Error:', error);
     if (progressNote) progressNote.textContent = '❌ Error: ' + error.message;
     if (progressClose) progressClose.classList.remove('hidden');
-    showToast('SOS Error: ' + error.message, 'error');
+    showToast('Error: ' + error.message, 'error');
   }
 }
 
-// DASHBOARD DATA LOADER
+// ═══════════════════════════════════════════════════════
+// DASHBOARD DATA
+// ═══════════════════════════════════════════════════════
+
 async function loadDashboardData(user) {
   try {
-    // Contacts count
     const contactsSnap = await getDocs(collection(db, 'users', user.uid, 'contacts'));
     if (contactCount) contactCount.textContent = contactsSnap.size;
 
-    // Alerts count + last alert
     const historySnap = await getDocs(query(
       collection(db, 'users', user.uid, 'sos_history'),
       orderBy('timestamp', 'desc')
@@ -696,7 +837,10 @@ async function loadDashboardData(user) {
   }
 }
 
-// UI HELPER FUNCTIONS
+// ═══════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════
+
 function updateStatusAlert() {
   if (statusDot) { statusDot.classList.remove('safe'); statusDot.classList.add('alert'); }
   if (statusText) {
@@ -715,7 +859,6 @@ function updateProgress(el, status, text) {
   const icon = el.querySelector('.progress-icon');
   const textEl = el.querySelector('.progress-text');
   el.classList.remove('done', 'error');
-
   if (status === 'loading' && icon) icon.textContent = '⏳';
   else if (status === 'done') { el.classList.add('done'); if (icon) icon.textContent = '✅'; }
   else if (status === 'error') { el.classList.add('error'); if (icon) icon.textContent = '❌'; }
