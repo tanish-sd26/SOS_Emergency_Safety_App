@@ -164,9 +164,8 @@
   .settings-row{flex-direction:column;align-items:flex-start;gap:6px}
   .settings-row.clickable{flex-direction:row;align-items:center}
 }
-/* ═══════════════════════════════════════ */
+
 /* WHATSAPP + VOICE + SAFE BUTTON STYLES  */
-/* ═══════════════════════════════════════ */
 
 .whatsapp-badge { background: #dcfce7; color: #16a34a; }
 body[data-theme="dark"] .whatsapp-badge { background: rgba(34,197,94,0.1); }
