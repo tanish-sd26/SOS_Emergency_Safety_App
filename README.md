@@ -64,10 +64,10 @@ It allows users to trigger alerts, share real-time location, and notify contacts
 ## 🖥️ Screenshots
 
 ### 🟢 Normal State
-<img width="1700" height="1200" alt="image" src="https://github.com/user-attachments/assets/74c78e81-e5a4-4696-a652-c687036b30bc" />
+<img width="1763" height="1153" alt="image" src="https://github.com/user-attachments/assets/8f878af2-bfb3-4a01-a123-8f4b9208cf05" />
 
 ### 🔴 Emergency Active State
-<img width="1750" height="1300" alt="image" src="https://github.com/user-attachments/assets/ee4f19dd-4907-4199-8f1c-674f007d615b" />
+<img width="1763" height="1239" alt="image" src="https://github.com/user-attachments/assets/bdc27411-268a-4d20-9cc2-f7e64a8353d6" />
 
 ---
 
