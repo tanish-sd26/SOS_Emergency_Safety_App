@@ -6,9 +6,10 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 
-const EMAILJS_PUBLIC_KEY = "iffnx5J7YOcNkpma3";       
-const EMAILJS_SERVICE_ID = "service_enahgir";       
-const EMAILJS_TEMPLATE_ID = "template_2b4t0sg"; 
+const emailjsConfig = window.APP_CONFIG?.emailjs || {};
+const EMAILJS_PUBLIC_KEY = emailjsConfig.publicKey || '';
+const EMAILJS_SERVICE_ID = emailjsConfig.serviceId || '';
+const EMAILJS_TEMPLATE_ID = emailjsConfig.templateId || '';
 
 // ═══════════════════════════════════════
 // DOM REFERENCES
@@ -72,8 +73,12 @@ const MAX_VOICE_RESTARTS = 3;
 // ═══════════════════════════════════════
 try {
   if (typeof emailjs !== 'undefined') {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-    console.log('📧 EmailJS initialized');
+    if (EMAILJS_PUBLIC_KEY) {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+      console.log('📧 EmailJS initialized');
+    } else {
+      console.warn('📧 EmailJS public key missing. Set EMAILJS_PUBLIC_KEY in your env config.');
+    }
   } else {
     console.warn('📧 EmailJS not loaded - email alerts will not work');
   }

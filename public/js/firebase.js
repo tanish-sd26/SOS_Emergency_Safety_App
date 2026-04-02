@@ -5,15 +5,11 @@ import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.14.1/firebas
 import { getFunctions } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
 
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDurQrlGhvJUJRLTHGtzu986Ig5PEu_wqE",
-  authDomain: "sos-emergency-safety-app.firebaseapp.com",
-  projectId: "sos-emergency-safety-app",
-  storageBucket: "sos-emergency-safety-app.firebasestorage.app",
-  messagingSenderId: "186941103305",
-  appId: "1:186941103305:web:d4fb7a3cace77a1377c118",
-  measurementId: "G-HSNJJSJ6PZ"
-};
+const firebaseConfig = window.APP_CONFIG?.firebase;
+
+if (!firebaseConfig) {
+  throw new Error('Missing Firebase config. Create public/js/env-config.js from .env or run scripts/generate-client-config.js');
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
